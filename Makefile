@@ -1,38 +1,40 @@
-# Directories
-SRC_DIR := src
-HEADER_DIR := headers
-BIN_DIR := bin
-OBJ_DIR := obj
+# Set up required environment
+# Define variables for paths and flags
+RAYLIB_PATH = C:\raylib\raylib
+RAYLIB_CPP_PATH = C:\raylib-cpp-master
+COMPILER_PATH = C:\raylib\w64devkit\bin
+CC = g++
+CFLAGS = $(RAYLIB_PATH)\src\raylib.rc.data -s -static -Os -Wall -I$(RAYLIB_PATH)\src -Iexternal -DPLATFORM_DESKTOP -Iheaders -I$(RAYLIB_CPP_PATH)\include -I$(SRCDIR) -g
+LDFLAGS = -l$(RAYLIB_CPP_PATH)\include\raylib.hpp -lopengl32 -lgdi32 -lwinmm -l$(RAYLIB_CPP_PATH)\include\raylib-cpp.hpp
+SRCDIR = src
+BINDIR = bin
 
-# Compiler
-CXX := g++
-CXXFLAGS := -Wall -std=c++17 -I$(HEADER_DIR) -I"C:/raylib-cpp-master/include"
-LDFLAGS := -L"C:/raylib/w64devkit/bin" -lraylib -lraylib-cpp
-
-# Find all source files
-SRC_FILES := $(shell find $(SRC_DIR) -name '*.cpp')
-# Create a list of object files from source files
-OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-
-# Output executable
-TARGET := $(BIN_DIR)/main
+# Add the compiler path to the system PATH
+export PATH := $(COMPILER_PATH):$(PATH)
 
 # Default target
-all: $(TARGET)
+all: $(BINDIR)/main.exe
 
-# Rule for linking the executable
-$(TARGET): $(OBJ_FILES)
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
-
-# Rule for compiling object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Clean up build files
+# Clean latest build
+# Remove the executable if it exists
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET)
+	@if [ -f $(BINDIR)/main.exe ]; then rm -f $(BINDIR)/main.exe; fi
 
-# Phony targets
-.PHONY: all clean
+# Collect all .cpp files
+# Find all .cpp files in the source directory and its subdirectories
+SRCS := $(shell find $(SRCDIR) -name '*.cpp')
+
+# Compile program
+# Compile the collected .cpp files into an executable
+$(BINDIR)/main.exe: $(SRCS)
+	$(CC) --version
+	$(CC) -o $@ $(SRCS) $(CFLAGS) $(LDFLAGS)
+
+# Execute program
+# Run the executable if it exists
+run: $(BINDIR)/main.exe
+	@if [ -f $(BINDIR)/main.exe ]; then $(BINDIR)/main.exe; fi
+
+# Reset environment
+.PHONY: clean run
+
