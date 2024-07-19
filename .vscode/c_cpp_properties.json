@@ -5,15 +5,14 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/raylib/raylib/src",
-                "${workspaceFolder}/headers",
-                "/raylib-cpp-master/include"
+                "${workspaceFolder}/headers"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "compilerPath": "C:\\\\raylib\\\\w64devkit\\\\bin\\\\g++.exe",
+            "compilerPath": "C:\\raylib\\w64devkit\\bin\\g++.exe",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "windows-gcc-x64"
