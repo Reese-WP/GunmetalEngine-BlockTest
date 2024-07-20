@@ -16,7 +16,7 @@ int main(void)
     // Define camera (position, target, up vector)
     Camera camera = { 0 };
     camera.position = (Vector3){ 32.0f, 34.0f, 32.0f };    // Camera position
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.target = (Vector3){ 0.0f, 34.0f, 32.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
@@ -29,6 +29,8 @@ int main(void)
     Chunk chunk1(Vector3{0, 0, 0}, Vector3{64, 64, 64});
 
     chunk1.populate();
+
+    chunk1.innitMesh();
 
     // Main game loop
     while (!WindowShouldClose())
@@ -46,6 +48,8 @@ int main(void)
             },
             GetMouseWheelMove()*2.0f);                              // Move to target (zoom)
 
+        if(IsKeyPressed(KEY_R)) { chunk1.rebuild(); }
+        
         BeginDrawing();
             ClearBackground(RAYWHITE);
             BeginMode3D(camera);
@@ -53,8 +57,8 @@ int main(void)
 
 
                 chunk1.draw_Mesh();
-                DrawCube(Vector3{0,0,0}, 1, 1, 1, RED);
-                chunk1.test();
+                // DrawCube(Vector3{0,0,0}, 1, 1, 1, RED);
+                // chunk1.test();
                 // chunk1.meshTest();
 
 

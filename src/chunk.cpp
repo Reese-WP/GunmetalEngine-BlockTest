@@ -10,10 +10,10 @@ Chunk::Chunk(Vector3 position, Vector3 dimensions)
     this->position = position;
     this->dimensions = dimensions;
     up = Vector3{0.0, 1.0, 0.0};
-    current = false;
+    current = true;
     mesh = {0};
 
-    Image uvimage = LoadImage("../assets/textures/texture_test.png");
+    Image uvimage = LoadImage("../assets/textures/texture.png");
     texture = LoadTextureFromImage(uvimage);
     UnloadImage(uvimage);
 }
@@ -57,6 +57,13 @@ void Chunk::meshTest()
     test.normals[7] = 1;
     test.normals[8] = 0;
 
+    test.texcoords[0] = 1;
+    test.texcoords[1] = 1;
+    test.texcoords[2] = 1;
+    test.texcoords[3] = 0;
+    test.texcoords[4] = 0;
+    test.texcoords[5] = 1;
+
     test.vertices[9]  = -1;
     test.vertices[10] = 0;
     test.vertices[11] = -1;
@@ -77,11 +84,20 @@ void Chunk::meshTest()
     test.normals[16] = 1;
     test.normals[17] = 0;
 
+    test.texcoords[6] = 0;
+    test.texcoords[7] = 0;
+    test.texcoords[8] = 0;
+    test.texcoords[9] = 1;
+    test.texcoords[10] = 1;
+    test.texcoords[11] = 0;
+
     UploadMesh(&test, false);
 
     Model ter = LoadModelFromMesh(test);
 
-    DrawModel(ter, Vector3{0, 0, 0}, 1.0f, GREEN);
+    ter.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+
+    DrawModel(ter, Vector3{0, 0, 0}, 1.0f, RAYWHITE);
 
 }
 
@@ -123,11 +139,31 @@ Vector3 Chunk::getRotation() { return up; }
 
 void Chunk::draw_Mesh() {
     if (!current) {
+        // UnloadMesh(mesh);
         generateMesh();
         current = true;
+        
+        // UnloadModel(model);
+        UploadMesh(&mesh, false);
+        model = LoadModelFromMesh(mesh);
+        model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
     }
 
-    RAYLIB_H::DrawModel(model, Vector3{0, 0, 0}, 1.0f, GREEN);
+    RAYLIB_H::DrawModel(model, this->position, 1.0f, RAYWHITE);
+}
+
+void Chunk::rebuild()
+{
+    this->current = false;
+    blocks[(int)(dimensions.x * dimensions.y * dimensions.z / 2)] = 1;
+}
+
+void Chunk::innitMesh() { 
+    generateMesh();
+    UploadMesh(&mesh, false);
+    model = LoadModelFromMesh(mesh);
+    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+
 }
 
 
@@ -160,24 +196,47 @@ RAYLIB_H::Vector3 Chunk::faceNormals[6] = {
     RAYLIB_H::Vector3{0, 0, -1}  // Back
 };
 
-//texcoords for each face direction
-RAYLIB_H::Vector2 Chunk::texturecoords[6] =
+RAYLIB_H::Vector2 Chunk::texturecoords[12][3] =
 {
-    {1/(float)3, 0.5},  // Up
-    {1/(float)3, 0.0},  // Down
-    {1.0, 0.5},         // Right
-    {0.0, 0.75},        // Left
-    {1/(float)3, 0.75}, // Front
-    {1/(float)3, 0.25}  // Back
+    {RAYLIB_H::Vector2{1, 0}, RAYLIB_H::Vector2{0, 1}, RAYLIB_H::Vector2{1, 1}},
+    {RAYLIB_H::Vector2{1, 0}, RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{0, 1}},
+    
+    {RAYLIB_H::Vector2{1, 0}, RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{0, 1}},
+    {RAYLIB_H::Vector2{1, 0}, RAYLIB_H::Vector2{0, 1}, RAYLIB_H::Vector2{1, 1}},
+    
+    {RAYLIB_H::Vector2{0, 1}, RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{0, 0}},
+    {RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{1, 0}},
+    
+    {RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{1, 0}},
+    {RAYLIB_H::Vector2{0, 1}, RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{0, 0}},
+    
+    {RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{1, 0}},
+    {RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{0, 1}},
+    
+    {RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{1, 0}, RAYLIB_H::Vector2{0, 0}},
+    {RAYLIB_H::Vector2{1, 1}, RAYLIB_H::Vector2{0, 0}, RAYLIB_H::Vector2{0, 1}}
 };
 
+/*
+//texcoords for each face direction
+// RAYLIB_H::Vector2 Chunk::texturecoords[6] =
+// {
+//     {1/(float)3, 0.5},  // Up
+//     {1/(float)3, 0.0},  // Down
+//     {1.0, 0.5},         // Right
+//     {0.0, 0.75},        // Left
+//     {1/(float)3, 0.75}, // Front
+//     {1/(float)3, 0.25}  // Back
+// };
+
 //texcoords for the verticies of the face
-RAYLIB_H::Vector2 Chunk::texfacecoords[4] = {
-    {},
-    {},
-    {},
-    {}
-};
+// RAYLIB_H::Vector2 Chunk::texfacecoords[4] = {
+//     {},
+//     {},
+//     {},
+//     {}
+// };
+*/
 
 int Chunk::getBlock(int index)
 {
@@ -244,8 +303,8 @@ void Chunk::generateMesh() {
                         normals.push_back(faceNormals[faceDir].z);
 
                         // Placeholder texcoords, adjust based on your texture layout
-                        texcoords.push_back(0.0f);
-                        texcoords.push_back(0.0f);
+                        texcoords.push_back(texturecoords[triIndex][j % 3].x);
+                        texcoords.push_back(texturecoords[triIndex][j % 3].y);
                     }
                     numFaces++;
                 }
@@ -263,14 +322,8 @@ void Chunk::generateMesh() {
     mesh.normals = (float *)MemAlloc(normals.size() * sizeof(float));
     std::copy(normals.begin(), normals.end(), mesh.normals);
 
-    // mesh.texcoords = (float *)MemAlloc(texcoords.size() * sizeof(float));
-    // std::copy(texcoords.begin(), texcoords.end(), mesh.texcoords);
-
-    UploadMesh(&mesh, false);
-
-    model = LoadModelFromMesh(mesh);
-
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+    mesh.texcoords = (float *)MemAlloc(texcoords.size() * sizeof(float));
+    std::copy(texcoords.begin(), texcoords.end(), mesh.texcoords);
 }
 
 void Chunk::freeMesh() {
