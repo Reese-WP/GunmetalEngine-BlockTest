@@ -30,7 +30,9 @@ int main(void)
 
     chunk1.populate();
 
-    chunk1.innitMesh();
+    // chunk1.innitMesh();
+
+    int testing = 0;
 
     // Main game loop
     while (!WindowShouldClose())
@@ -48,7 +50,7 @@ int main(void)
             },
             GetMouseWheelMove()*2.0f);                              // Move to target (zoom)
 
-        if(IsKeyPressed(KEY_R)) { chunk1.rebuild(); }
+        if(IsKeyDown(KEY_R)) { chunk1.rebuild(testing); testing++; }
         
         BeginDrawing();
             ClearBackground(RAYWHITE);

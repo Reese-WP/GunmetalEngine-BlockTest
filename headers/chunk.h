@@ -26,8 +26,9 @@ class Chunk
     public:
         Chunk(RAYLIB_H::Vector3 position);
         Chunk(RAYLIB_H::Vector3 position = {0, 0, 0}, RAYLIB_H::Vector3 dimensions = {32, 32, 32});
+        ~Chunk();
         void populate();
-        void rebuild();
+        void rebuild(int place);
         void innitMesh();
 
         void setPosition(RAYLIB_H::Vector3 position);
@@ -38,6 +39,9 @@ class Chunk
         RAYLIB_H::Vector3 getRotation();
 
         void draw_Mesh();
+
+        void dig();
+        void place();
 
         void test();
         void meshTest();

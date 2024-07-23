@@ -10,8 +10,7 @@ Chunk::Chunk(Vector3 position, Vector3 dimensions)
     this->position = position;
     this->dimensions = dimensions;
     up = Vector3{0.0, 1.0, 0.0};
-    current = true;
-    mesh = {0};
+    current = false;
 
     Image uvimage = LoadImage("../assets/textures/texture.png");
     texture = LoadTextureFromImage(uvimage);
@@ -21,6 +20,11 @@ Chunk::Chunk(Vector3 position, Vector3 dimensions)
 
 
 Chunk::Chunk(Vector3 position) { Chunk(position, Vector3{32, 32, 32}); }
+
+Chunk::~Chunk()
+{
+    //chunk destructor
+}
 
 void Chunk::test()
 {
@@ -109,11 +113,11 @@ void Chunk::populate()
 
     for(int i = 0; i < ((dimensions.x * dimensions.y * dimensions.z / 2) - 1); i++)
     {
-        blocks[i] = 1;
+        blocks[i] = (short)1;
     }
     for(int i = (dimensions.x * dimensions.y * dimensions.z / 2); i < (dimensions.x * dimensions.y * dimensions.z); i++)
     {
-        blocks[i] = 0;
+        blocks[i] = (short)0;
     }
 }
 
@@ -139,7 +143,7 @@ Vector3 Chunk::getRotation() { return up; }
 
 void Chunk::draw_Mesh() {
     if (!current) {
-        // UnloadMesh(mesh);
+        UnloadMesh(mesh);
         generateMesh();
         current = true;
         
@@ -152,10 +156,10 @@ void Chunk::draw_Mesh() {
     RAYLIB_H::DrawModel(model, this->position, 1.0f, RAYWHITE);
 }
 
-void Chunk::rebuild()
+void Chunk::rebuild(int place)
 {
     this->current = false;
-    blocks[(int)(dimensions.x * dimensions.y * dimensions.z / 2)] = 1;
+    blocks[(int)(dimensions.x * dimensions.y * dimensions.z / 2 - 1) + place] = (short)1;
 }
 
 void Chunk::innitMesh() { 
@@ -166,6 +170,15 @@ void Chunk::innitMesh() {
 
 }
 
+void Chunk::dig()
+{
+    //dig
+}
+
+void Chunk::place()
+{
+    //place
+}
 
 
 
@@ -267,14 +280,11 @@ int Chunk::traverse(RAYLIB_H::Vector3 coordinate, RAYLIB_H::Vector3 offset)
     return Chunk::traverse(RAYMATH_H::Vector3Add(coordinate, offset));
 }
 
-void Chunk::generateMesh() {
-    // Free existing mesh data
-    freeMesh();
-
+void Chunk::generateMesh() 
+{
     RAYLIB_H::Vector3 current;
     int numFaces = 0;
 
-    // Estimate initial size for vertices, normals, and texcoords
     std::vector<float> vertices;
     std::vector<float> normals;
     std::vector<float> texcoords;
@@ -302,7 +312,6 @@ void Chunk::generateMesh() {
                         normals.push_back(faceNormals[faceDir].y);
                         normals.push_back(faceNormals[faceDir].z);
 
-                        // Placeholder texcoords, adjust based on your texture layout
                         texcoords.push_back(texturecoords[triIndex][j % 3].x);
                         texcoords.push_back(texturecoords[triIndex][j % 3].y);
                     }
@@ -311,6 +320,8 @@ void Chunk::generateMesh() {
             }
         }
     }
+
+    mesh = { 0 };
 
     mesh.triangleCount = numFaces * 2;
     mesh.vertexCount = numFaces * 6;
@@ -324,21 +335,6 @@ void Chunk::generateMesh() {
 
     mesh.texcoords = (float *)MemAlloc(texcoords.size() * sizeof(float));
     std::copy(texcoords.begin(), texcoords.end(), mesh.texcoords);
-}
-
-void Chunk::freeMesh() {
-    if (mesh.vertices) {
-        RL_FREE(mesh.vertices);
-        mesh.vertices = nullptr;
-    }
-    if (mesh.normals) {
-        RL_FREE(mesh.normals);
-        mesh.normals = nullptr;
-    }
-    if (mesh.texcoords) {
-        RL_FREE(mesh.texcoords);
-        mesh.texcoords = nullptr;
-    }
 }
 
 
