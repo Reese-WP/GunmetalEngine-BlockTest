@@ -156,10 +156,11 @@ void Chunk::draw_Mesh() {
     RAYLIB_H::DrawModel(model, this->position, 1.0f, RAYWHITE);
 }
 
-void Chunk::rebuild(int place)
+void Chunk::rebuild()
 {
     this->current = false;
-    blocks[(int)(dimensions.x * dimensions.y * dimensions.z / 2 - 1) + place] = (short)1;
+    blocks[(int)(dimensions.x * dimensions.y * dimensions.z / 2 - 1) + testing] = (short)1;
+    testing++;
 }
 
 void Chunk::innitMesh() { 
