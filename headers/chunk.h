@@ -1,9 +1,16 @@
+#ifndef CHUNK_H
+#define CHUNK_H
+
+#include <vector>
+#include "raylib.h"
+#include "raymath.h"
+
 class Chunk
 {
     private:
         RAYLIB_H::Vector3 position;
         RAYLIB_H::Vector3 dimensions;
-        RAYLIB_H::BoundingBox bounds;
+        // RAYLIB_H::BoundingBox bounds;
         short *blocks;
         RAYLIB_H::Vector3 up;
         Mesh mesh = { 0 };
@@ -21,7 +28,6 @@ class Chunk
         int traverse(RAYLIB_H::Vector3 coord, RAYLIB_H::Vector3 offset);
         int traverse(RAYLIB_H::Vector3 coord);
         void generateMesh();
-        void freeMesh(); 
 
     public:
         Chunk(RAYLIB_H::Vector3 position);
@@ -38,13 +44,19 @@ class Chunk
         // void rotate(RAYLIB_H::Vector3 rotate);
         RAYLIB_H::Vector3 getRotation();
 
+        RAYLIB_H::Vector3 getDimensions();
+
         void draw_Mesh();
 
-        void dig();
-        void place();
+        void dig(Ray hit);
+        void place(Ray hit);
 
         void test();
         void meshTest();
 
         int testing = 0;
 };
+
+extern std::vector<Chunk *> chunks;
+
+#endif

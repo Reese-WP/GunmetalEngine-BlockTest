@@ -4,6 +4,8 @@
 #include "chunk.h"
 
 
+std::vector<Chunk *> chunks;
+
 //public
 Chunk::Chunk(Vector3 position, Vector3 dimensions)
 {
@@ -141,6 +143,8 @@ void Chunk::setRotation(Vector3 up) { this->up = up; }
 
 Vector3 Chunk::getRotation() { return up; }
 
+RAYLIB_H::Vector3 Chunk::getDimensions() { return dimensions; }
+
 void Chunk::draw_Mesh() {
     if (!current) {
         UnloadMesh(mesh);
@@ -171,14 +175,58 @@ void Chunk::innitMesh() {
 
 }
 
-void Chunk::dig()
+void Chunk::dig(Ray hit)
 {
     //dig
+
+    RayCollision meshCollisionPoint = GetRayCollisionMesh(hit, mesh, model.transform);
+
+    Vector3 normal_point = Vector3Add(meshCollisionPoint.point, meshCollisionPoint.normal);
+
+    if(meshCollisionPoint.hit)
+    {
+        Vector3 hit_point = Vector3Subtract(Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
+                                Vector3{
+                                    (normal_point.x > meshCollisionPoint.point.x)*-0.5f + (normal_point.x < meshCollisionPoint.point.x)*0.5f,
+                                    (normal_point.y > meshCollisionPoint.point.y)*-0.5f + (normal_point.y < meshCollisionPoint.point.y)*0.5f,
+                                    (normal_point.z > meshCollisionPoint.point.z)*-0.5f + (normal_point.z < meshCollisionPoint.point.z)*0.5f
+                                }), position);
+
+        // Vector3Subtract(Vector3Subtract(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}), Vector3Normalize(meshCollisionPoint.normal)), position);
+        
+        Vector3 coordinate = {floor(hit_point.x), floor(hit_point.y), floor(hit_point.z)};
+
+        blocks[(int)((coordinate.z) + ((coordinate.x) * dimensions.z) + ((coordinate.y) * dimensions.x * dimensions.z))] = (short)0;
+
+        this->current = false;
+    }
 }
 
-void Chunk::place()
+void Chunk::place(Ray hit)
 {
     //place
+
+    RayCollision meshCollisionPoint = GetRayCollisionMesh(hit, mesh, model.transform);
+
+    Vector3 normal_point = Vector3Add(meshCollisionPoint.point, meshCollisionPoint.normal);
+
+    if(meshCollisionPoint.hit)
+    {
+        Vector3 hit_point = Vector3Subtract(Vector3Add(Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
+                                Vector3{
+                                    (normal_point.x > meshCollisionPoint.point.x)*-0.5f + (normal_point.x < meshCollisionPoint.point.x)*0.5f,
+                                    (normal_point.y > meshCollisionPoint.point.y)*-0.5f + (normal_point.y < meshCollisionPoint.point.y)*0.5f,
+                                    (normal_point.z > meshCollisionPoint.point.z)*-0.5f + (normal_point.z < meshCollisionPoint.point.z)*0.5f
+                                }), meshCollisionPoint.normal), position);
+
+        // Vector3Subtract(Vector3Subtract(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}), Vector3Normalize(meshCollisionPoint.normal)), position);
+        
+        Vector3 coordinate = {floor(hit_point.x), floor(hit_point.y), floor(hit_point.z)};
+
+        blocks[(int)((coordinate.z) + ((coordinate.x) * dimensions.z) + ((coordinate.y) * dimensions.x * dimensions.z))] = (short)1;
+
+        this->current = false;
+    }
 }
 
 
