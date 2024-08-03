@@ -167,17 +167,20 @@ void Chunk::rebuild()
     testing++;
 }
 
-void Chunk::innitMesh() { 
-    generateMesh();
-    UploadMesh(&mesh, false);
-    model = LoadModelFromMesh(mesh);
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+// void Chunk::innitMesh() { 
+//     generateMesh();
+//     UploadMesh(&mesh, false);
+//     model = LoadModelFromMesh(mesh);
+//     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-}
+// }
 
-void Chunk::dig(Ray hit)
+bool Chunk::dig(Ray hit)
 {
     //dig
+
+    hit.position = Vector3Subtract(hit.position, this->position);
+    // hit.direction = Vector3Subtract(hit.direction, this->position);
 
     RayCollision meshCollisionPoint = GetRayCollisionMesh(hit, mesh, model.transform);
 
@@ -185,12 +188,12 @@ void Chunk::dig(Ray hit)
 
     if(meshCollisionPoint.hit)
     {
-        Vector3 hit_point = Vector3Subtract(Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
+        Vector3 hit_point = Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
                                 Vector3{
                                     (normal_point.x > meshCollisionPoint.point.x)*-0.5f + (normal_point.x < meshCollisionPoint.point.x)*0.5f,
                                     (normal_point.y > meshCollisionPoint.point.y)*-0.5f + (normal_point.y < meshCollisionPoint.point.y)*0.5f,
                                     (normal_point.z > meshCollisionPoint.point.z)*-0.5f + (normal_point.z < meshCollisionPoint.point.z)*0.5f
-                                }), position);
+                                });
 
         // Vector3Subtract(Vector3Subtract(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}), Vector3Normalize(meshCollisionPoint.normal)), position);
         
@@ -200,11 +203,16 @@ void Chunk::dig(Ray hit)
 
         this->current = false;
     }
+
+    return meshCollisionPoint.hit;
 }
 
-void Chunk::place(Ray hit)
+bool Chunk::place(Ray hit)
 {
     //place
+
+    hit.position = Vector3Subtract(hit.position, this->position);
+    // hit.direction = Vector3Subtract(hit.direction, this->position);
 
     RayCollision meshCollisionPoint = GetRayCollisionMesh(hit, mesh, model.transform);
 
@@ -212,21 +220,25 @@ void Chunk::place(Ray hit)
 
     if(meshCollisionPoint.hit)
     {
-        Vector3 hit_point = Vector3Subtract(Vector3Add(Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
+        Vector3 hit_point = Vector3Add(Vector3Add(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}),
                                 Vector3{
                                     (normal_point.x > meshCollisionPoint.point.x)*-0.5f + (normal_point.x < meshCollisionPoint.point.x)*0.5f,
                                     (normal_point.y > meshCollisionPoint.point.y)*-0.5f + (normal_point.y < meshCollisionPoint.point.y)*0.5f,
                                     (normal_point.z > meshCollisionPoint.point.z)*-0.5f + (normal_point.z < meshCollisionPoint.point.z)*0.5f
-                                }), meshCollisionPoint.normal), position);
+                                }), meshCollisionPoint.normal);
 
         // Vector3Subtract(Vector3Subtract(Vector3Add(meshCollisionPoint.point, Vector3{0.5f, 0.5f, 0.5f}), Vector3Normalize(meshCollisionPoint.normal)), position);
         
         Vector3 coordinate = {floor(hit_point.x), floor(hit_point.y), floor(hit_point.z)};
 
+        if(coordinate.x >= dimensions.x || coordinate.x < 0 || coordinate.y >= dimensions.y || coordinate.y < 0 || coordinate.z >= dimensions.z || coordinate.z < 0) { return false; }
+
         blocks[(int)((coordinate.z) + ((coordinate.x) * dimensions.z) + ((coordinate.y) * dimensions.x * dimensions.z))] = (short)1;
 
         this->current = false;
     }
+
+    return meshCollisionPoint.hit;
 }
 
 

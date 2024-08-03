@@ -3,30 +3,92 @@
 #include "raymath.h"
 #include "player.h"
 #include "chunk.h"
+// #include <iostream>
+
+float dist(Vector3 p1, Vector3 p2)
+{
+    return sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) * (p1.y - p2.y)) + ((p1.z - p2.z) * (p1.z - p2.z)));
+}
+
 
 //Private:
 
-int Player::nearest_Chunk()
+std::vector<Chunk *> Player::nearest_Chunks()
 {
     //nearest chunk index
 
-    int maxCollisionDistance = INT_MAX;
+    float maxCollisionDistance = 500.0;
 
-    int chunk = -1;
+    std::vector<Chunk *> chunk_batch(chunks);
 
-    for(int i = 0; i < chunks.size(); i++)
+    std::vector<Chunk *> chunk_list;
+    std::vector<float> distances;
+
+    for(int i = 0; i < chunk_batch.size(); i++)
     {
-        RayCollision chunk_hit = GetRayCollisionBox(hit_ray, BoundingBox{chunks[i]->getPosition(), Vector3Add(chunks[i]->getPosition(), chunks[i]->getDimensions())});
-
-        if(chunk_hit.hit && (chunk_hit.distance < maxCollisionDistance))
+        if(dist(camera.position, Vector3Add(chunk_batch.at(i)->getPosition(), Vector3Scale(chunk_batch.at(i)->getDimensions(), 0.5))) > maxCollisionDistance)
         {
-            maxCollisionDistance = chunk_hit.distance;
-            chunk = i;
+            chunk_batch.erase(chunk_batch.begin() + i);
+            i--;
+            continue;
+        }
+
+        RayCollision chunk_hit = GetRayCollisionBox(hit_ray, BoundingBox{chunk_batch.at(i)->getPosition(), Vector3Add(chunk_batch.at(i)->getPosition(), chunk_batch.at(i)->getDimensions())});
+
+        if(chunk_hit.hit)
+        {
+            float distance_to_player = dist(camera.position, Vector3Add(chunk_batch.at(i)->getPosition(), Vector3Scale(chunk_batch.at(i)->getDimensions(), 0.5)));
+
+
+            if(chunk_batch.size() >= 2)
+            {
+                if(distances.size() == 1)
+                {
+                    if(distance_to_player >= distances.at(0))
+                    {
+                        distances.insert(distances.begin(), distance_to_player);
+                        chunk_list.insert(chunk_list.begin(), chunk_batch.at(i));
+                        continue;
+                    } else {
+                        distances.push_back(distance_to_player);
+                        chunk_list.push_back(chunk_batch.at(i));
+                        continue;
+                    }
+                }
+                else if(distances.size() == 0)
+                {
+                    // std::cout << "test" << std::endl;
+                    distances.insert(distances.begin(), distance_to_player);
+                    chunk_list.insert(chunk_list.begin(), chunk_batch.at(i));
+                    continue;
+                }
+
+                for(int j = distances.size() - 1; j >= 0; j--)
+                {
+                    if(distance_to_player <= distances.at(j))
+                    {
+                        chunk_list.insert(chunk_list.begin() + j + 1, chunk_batch.at(i));
+                        distances.insert(distances.begin() + j + 1, distance_to_player);
+                        break;
+                    }
+                }
+
+                if(distance_to_player > distances.at(distances.size() - 1))
+                {
+                    chunk_list.insert(chunk_list.begin(), chunk_batch.at(i));
+                    distances.insert(distances.begin(), distance_to_player);
+                }
+
+            } else {
+                chunk_list.insert(chunk_list.begin(), chunk_batch.at(0));
+                break;
+            }
+            
         }
 
     }
 
-    return chunk;
+    return chunk_list;
 }
 
 //Public:
@@ -80,22 +142,26 @@ void Player::update()
                 GetMouseDelta().y * 0.05f,                            // Rotation: pitch
                 0.0f                                                // Rotation: roll
             },
-            GetMouseWheelMove()*2.0f);                              // Move to target (zoom)
+            0.0f);                              // Move to target (zoom)   GetMouseWheelMove()*2.0f
         
         hit_ray.position = camera.position;
         hit_ray.direction = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
 
-        if(IsKeyDown(KEY_R)) { chunks[0]->rebuild(); }
+        if(IsKeyDown(KEY_R)) { chunks.at(0)->rebuild(); }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+        if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && IsKeyDown(KEY_LEFT_CONTROL)))
         {
-            int chunk = nearest_Chunk();
-            if(chunk != -1) { chunks[chunk]->dig(hit_ray); }
+            std::vector<Chunk *> chunk_list = nearest_Chunks();
+            
+            for(int i = chunk_list.size() - 1; i >= 0; i--)
+            { if(chunk_list.at(i)->dig(hit_ray)) { break; } }
         }
-        else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_CONTROL)))
         {
-            int chunk = nearest_Chunk();
-            if(chunk != -1) { chunks[chunk]->place(hit_ray); }
+            std::vector<Chunk *> chunk_list = nearest_Chunks();
+            
+            for(int i = chunk_list.size() - 1; i >= 0; i--)
+            { if(chunk_list.at(i)->place(hit_ray)) { break; } }
         }
     }
 }

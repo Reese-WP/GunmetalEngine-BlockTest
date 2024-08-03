@@ -35,7 +35,7 @@ class Chunk
         ~Chunk();
         void populate();
         void rebuild();
-        void innitMesh();
+        // void innitMesh();
 
         void setPosition(RAYLIB_H::Vector3 position);
         RAYLIB_H::Vector3 getPosition();
@@ -48,8 +48,8 @@ class Chunk
 
         void draw_Mesh();
 
-        void dig(Ray hit);
-        void place(Ray hit);
+        bool dig(Ray hit);
+        bool place(Ray hit);
 
         void test();
         void meshTest();

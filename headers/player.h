@@ -4,6 +4,7 @@
 #include <vector>
 #include "raylib.h"
 #include "raymath.h"
+#include "chunk.h"
 
 class Player
 {
@@ -12,7 +13,7 @@ class Player
     Ray hit_ray;
     Ray feet;
 
-    int nearest_Chunk();
+    std::vector<Chunk *> nearest_Chunks();
 
 
     public:
