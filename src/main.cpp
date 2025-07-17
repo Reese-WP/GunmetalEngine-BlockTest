@@ -65,6 +65,7 @@ int main(void)
             EndMode3D();
 
             DrawFPS(10, 10);
+            DrawText("x", 600, 450, 20, BLACK);
         EndDrawing();
 
     }
